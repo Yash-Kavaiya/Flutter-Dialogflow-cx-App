@@ -4,9 +4,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:share_plus/share_plus.dart';
 import 'chatbot_client.dart';
 import 'google_colors.dart';
 
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'T-Mobile Assist Chatbot',
+      title: 'Easy AI Labs',
       theme: GoogleColors.googleTheme,
       darkTheme: GoogleColors.googleDarkTheme,
       themeMode: ThemeMode.system,
@@ -53,6 +52,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final FlutterTts _flutterTts = FlutterTts();
   bool _speechEnabled = false;
   bool _isListening = false;
+  bool _isTtsMuted = false;
   String _wordsSpoken = "";
   
   // Camera functionality
@@ -143,7 +143,36 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // Voice functionality methods
   Future<void> _speak(String text) async {
-    await _flutterTts.speak(text);
+    if (!_isTtsMuted) {
+      await _flutterTts.speak(text);
+    }
+  }
+
+  void _toggleTtsMute() {
+    setState(() {
+      _isTtsMuted = !_isTtsMuted;
+    });
+  }
+
+  void _shareConversation() {
+    if (_messages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No conversation to share'),
+          backgroundColor: GoogleColors.red,
+        ),
+      );
+      return;
+    }
+
+    final conversationText = _messages
+        .map((message) => '${message.isUser ? 'You' : 'Assistant'}: ${message.text}')
+        .join('\n\n');
+    
+    Share.share(
+      conversationText,
+      subject: 'AgentApp Conversation - ${DateTime.now().toString().split(' ')[0]}',
+    );
   }
 
   void _startListening() async {
@@ -304,7 +333,7 @@ class _ChatScreenState extends State<ChatScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(icon, color: color, size: 30),
@@ -408,6 +437,22 @@ class _ChatScreenState extends State<ChatScreen> {
         backgroundColor: GoogleColors.blue,
         foregroundColor: GoogleColors.white,
         centerTitle: true,
+        actions: [
+          // Mute/unmute toggle for voice responses
+          IconButton(
+            onPressed: _toggleTtsMute,
+            icon: Icon(
+              _isTtsMuted ? Icons.volume_off : Icons.volume_up,
+            ),
+            tooltip: _isTtsMuted ? 'Unmute voice responses' : 'Mute voice responses',
+          ),
+          // Share conversation button
+          IconButton(
+            onPressed: _shareConversation,
+            icon: const Icon(Icons.share),
+            tooltip: 'Share conversation',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -663,7 +708,6 @@ class ChatBubble extends StatelessWidget {
           ],
         );
       case MessageType.text:
-      default:
         return Text(
           message.text,
           style: TextStyle(

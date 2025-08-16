@@ -15,7 +15,7 @@
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
     
     <application
-        android:label="myapp"
+        android:label="AgentApp"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

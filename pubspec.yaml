@@ -1,4 +1,4 @@
-name: myapp
+name: agent_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -37,15 +37,16 @@ dependencies:
   http: ^0.13.4
   googleapis_auth: ^1.1.1
   googleapis: ^13.1.0
-  speech_to_text: ^6.6.0
+  speech_to_text: ^7.3.0
   flutter_tts: ^3.8.5
   camera: ^0.10.5+9
-  file_picker: ^6.1.1
+  file_picker: ^8.1.2
   image_picker: ^1.0.7
   permission_handler: ^11.3.0
-  flutter_screen_recording: ^1.2.3
+  flutter_screen_recording: ^2.0.16
   path_provider: ^2.1.2
   mime: ^1.0.4
+  share_plus: ^10.1.2
 
 dev_dependencies:
   flutter_test:
