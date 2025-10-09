@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // Import GoogleFonts
+import 'package:provider/provider.dart'; // Import Provider
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:camera/camera.dart';
@@ -10,7 +12,29 @@ import 'chatbot_client.dart';
 import 'google_colors.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+// ThemeProvider class to manage the theme state
+class ThemeProvider with ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.system; // Default to system theme
+
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme() {
+    _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
+  void setSystemTheme() {
+    _themeMode = ThemeMode.system;
+    notifyListeners();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -18,12 +42,72 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Easy AI Labs',
-      theme: GoogleColors.googleTheme,
-      darkTheme: GoogleColors.googleDarkTheme,
-      themeMode: ThemeMode.system,
-      home: const ChatScreen(),
+    const Color primarySeedColor = GoogleColors.blue;
+
+    // Define a common TextTheme
+    final TextTheme appTextTheme = TextTheme(
+      displayLarge: GoogleFonts.oswald(fontSize: 57, fontWeight: FontWeight.bold),
+      titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
+      bodyMedium: GoogleFonts.openSans(fontSize: 14),
+    );
+
+    // Light Theme
+    final ThemeData lightTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.light,
+      ),
+      textTheme: appTextTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: primarySeedColor,
+        foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+      ),
+    );
+
+    // Dark Theme
+    final darkColorScheme = ColorScheme.fromSeed(
+        seedColor: primarySeedColor, brightness: Brightness.dark);
+    final ThemeData darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: darkColorScheme,
+      textTheme: appTextTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.oswald(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.black,
+          backgroundColor: darkColorScheme.primaryContainer,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+      ),
+    );
+
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Easy AI Labs',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const ChatScreen(),
+        );
+      },
     );
   }
 }
@@ -252,7 +336,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: GoogleColors.greyLight,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -262,13 +346,9 @@ class _ChatScreenState extends State<ChatScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Choose Attachment',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: GoogleColors.greyVeryDark,
-                ),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 20),
               Row(
@@ -333,7 +413,7 @@ class _ChatScreenState extends State<ChatScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(30),
             ),
             child: Icon(icon, color: color, size: 30),
@@ -341,10 +421,7 @@ class _ChatScreenState extends State<ChatScreen> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: GoogleColors.greyVeryDark,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium
           ),
         ],
       ),
@@ -363,8 +440,6 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 AppBar(
                   title: const Text('Live Camera Stream'),
-                  backgroundColor: GoogleColors.blue,
-                  foregroundColor: GoogleColors.white,
                   leading: IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
@@ -374,9 +449,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: _isCameraInitialized
                       ? CameraPreview(_cameraController!)
                       : const Center(
-                          child: CircularProgressIndicator(
-                            color: GoogleColors.blue,
-                          ),
+                          child: CircularProgressIndicator(),
                         ),
                 ),
                 Container(
@@ -388,10 +461,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         onPressed: _takePhoto,
                         icon: const Icon(Icons.camera),
                         label: const Text('Capture'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: GoogleColors.blue,
-                          foregroundColor: GoogleColors.white,
-                        ),
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
@@ -402,8 +471,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         icon: Icon(_isRecording ? Icons.stop : Icons.videocam),
                         label: Text(_isRecording ? 'Stop' : 'Record'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isRecording ? GoogleColors.red : GoogleColors.green,
-                          foregroundColor: GoogleColors.white,
+                          backgroundColor: _isRecording ? Colors.red : Colors.green,
                         ),
                       ),
                     ],
@@ -431,13 +499,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('T-Mobile Assist'),
-        backgroundColor: GoogleColors.blue,
-        foregroundColor: GoogleColors.white,
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: Icon(themeProvider.themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => themeProvider.toggleTheme(),
+            tooltip: 'Toggle Theme',
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_mode),
+            onPressed: () => themeProvider.setSystemTheme(),
+            tooltip: 'Set System Theme',
+          ),
           // Mute/unmute toggle for voice responses
           IconButton(
             onPressed: _toggleTtsMute,
@@ -468,16 +545,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Row(
                       children: [
                         CircularProgressIndicator(
-                          color: GoogleColors.blue,
                           strokeWidth: 2,
                         ),
                         const SizedBox(width: 16),
                         Text(
                           'T-Mobile Assistant is typing...',
-                          style: TextStyle(
-                            color: GoogleColors.grey,
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)
                         ),
                       ],
                     ),
@@ -492,10 +565,10 @@ class _ChatScreenState extends State<ChatScreen> {
           Container(
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              color: GoogleColors.greyLight,
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: GoogleColors.grey.withValues(alpha: 0.3),
+                  color: Colors.grey.withOpacity(0.3),
                   blurRadius: 4,
                   offset: const Offset(0, -2),
                 ),
@@ -507,8 +580,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   onPressed: _showAttachmentOptions,
                   icon: const Icon(Icons.attach_file),
                   style: IconButton.styleFrom(
-                    backgroundColor: GoogleColors.grey.withValues(alpha: 0.1),
-                    foregroundColor: GoogleColors.blue,
+                    backgroundColor: Colors.grey.withOpacity(0.1),
+                    foregroundColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -522,7 +595,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: GoogleColors.white,
+                      fillColor: Theme.of(context).colorScheme.onInverseSurface,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -541,12 +614,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: _isListening ? GoogleColors.red : GoogleColors.blue,
+                      color: _isListening ? Colors.red : Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
-                      color: GoogleColors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -557,12 +630,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: GoogleColors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.send,
-                      color: GoogleColors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -610,8 +683,8 @@ class ChatBubble extends StatelessWidget {
           if (!message.isUser) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: GoogleColors.green,
-              child: const Icon(Icons.smart_toy, size: 16, color: GoogleColors.white),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.smart_toy, size: 16, color: Colors.white),
             ),
             const SizedBox(width: 8),
           ],
@@ -620,19 +693,19 @@ class ChatBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? GoogleColors.blue
-                    : GoogleColors.greyLight,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: _buildMessageContent(message),
+              child: _buildMessageContent(message, context),
             ),
           ),
           if (message.isUser) ...[
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundColor: GoogleColors.blue,
-              child: const Icon(Icons.person, size: 16, color: GoogleColors.white),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              child: const Icon(Icons.person, size: 16, color: Colors.white),
             ),
           ],
         ],
@@ -640,7 +713,7 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageContent(ChatMessage message) {
+  Widget _buildMessageContent(ChatMessage message, BuildContext context) {
     switch (message.messageType) {
       case MessageType.image:
         return Column(
@@ -661,7 +734,7 @@ class ChatBubble extends StatelessWidget {
               Text(
                 message.text,
                 style: TextStyle(
-                  color: message.isUser ? GoogleColors.white : GoogleColors.greyVeryDark,
+                  color: message.isUser ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ],
@@ -673,7 +746,7 @@ class ChatBubble extends StatelessWidget {
           children: [
             Icon(
               Icons.insert_drive_file,
-              color: message.isUser ? GoogleColors.white : GoogleColors.blue,
+              color: message.isUser ? Colors.white : Theme.of(context).colorScheme.primary,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -681,7 +754,7 @@ class ChatBubble extends StatelessWidget {
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: message.isUser ? GoogleColors.white : GoogleColors.greyVeryDark,
+                  color: message.isUser ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ),
@@ -693,7 +766,7 @@ class ChatBubble extends StatelessWidget {
           children: [
             Icon(
               Icons.mic,
-              color: message.isUser ? GoogleColors.white : GoogleColors.blue,
+              color: message.isUser ? Colors.white : Theme.of(context).colorScheme.primary,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -701,7 +774,7 @@ class ChatBubble extends StatelessWidget {
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: message.isUser ? GoogleColors.white : GoogleColors.greyVeryDark,
+                  color: message.isUser ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ),
@@ -711,7 +784,7 @@ class ChatBubble extends StatelessWidget {
         return Text(
           message.text,
           style: TextStyle(
-            color: message.isUser ? GoogleColors.white : GoogleColors.greyVeryDark,
+            color: message.isUser ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
           ),
         );
     }
