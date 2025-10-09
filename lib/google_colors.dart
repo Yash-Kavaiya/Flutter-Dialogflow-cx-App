@@ -24,8 +24,7 @@ class GoogleColors {
       brightness: Brightness.light,
       primary: blue,
       secondary: green,
-      surface: greyLight,
-      background: white,
+      surface: white,
       error: red,
     ),
     appBarTheme: const AppBarTheme(
@@ -73,7 +72,6 @@ class GoogleColors {
       primary: blueLight,
       secondary: green,
       surface: greyVeryDark,
-      background: greyVeryDark,
       error: red,
     ),
     appBarTheme: const AppBarTheme(

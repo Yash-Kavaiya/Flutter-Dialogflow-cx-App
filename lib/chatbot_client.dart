@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:googleapis/dialogflow/v3.dart' as df;
@@ -61,7 +62,9 @@ class ChatbotClient {
       
       return 'No response from chatbot';
     } catch (e) {
-      print('Error sending message: $e');
+      if (kDebugMode) {
+        print('Error sending message: $e');
+      }
       return 'Error: Unable to get response from chatbot';
     }
   }
